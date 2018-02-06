@@ -50,7 +50,7 @@ def permissions(sheet_name):
 
 
 def add_permissions(sheet_name, user):
-    client.insert_permission(data[sheet_name],
+    client.insert_permission(data[sheet_name]['sheet_id'],
                              data[user]['email'],
                              perm_type='user',
                              role='writer'
@@ -61,9 +61,8 @@ def delete_permissions(sheet_id, user_id):
     client.remove_permission(sheet_id, user_id)
 
 
-permissions('test_of_test')
-write_url_sheet('test_of_test')
-
+name = 'test2'
+permissions(name)
 
 file.close()
 
