@@ -3,5 +3,8 @@ from app import spread, drive
 
 log = getLogger(__name__)
 
-spread.permissions('test_of_test')
-print(drive.get_file_list())
+name = 'test2'
+
+spread.create_spreadsheet(name)
+spread.add_permission(name, 'atsuo')
+print(spread.get_all_spreadsheets())

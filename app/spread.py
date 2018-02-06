@@ -3,16 +3,14 @@ from gspread import Client, authorize
 from oauth2client.service_account import ServiceAccountCredentials
 
 CLIENT_SECRET_FILE = './projectName.json'
-
 SCOPES = ['https://spreadsheets.google.com/feeds',
           'https://www.googleapis.com/auth/drive'
           ]
-
 file = open('config.yaml', "r+")
 data = yaml.load(file)
 
 
-def login_spread_sheets() -> Client:
+def login_spreadsheets() -> Client:
     '''GoogleドライブにログインしてClientクラスを返す
     '''
     try:
@@ -25,37 +23,78 @@ def login_spread_sheets() -> Client:
         raise Exception('GoogleDriveにログインできませんでした %s' % e)
 
 
-client = login_spread_sheets()
+client = login_spreadsheets()
 
 
-def write_url_sheet(sheet_name):
-    test_sheet_key = data[sheet_name]['sheet_id']
-    spread_sheet = client.open_by_key(test_sheet_key)
-    sheet1 = spread_sheet.get_worksheet(0)
-    sheet1.update_acell('A1', 'test from python')
+# spreadsheet関係
+def create_spreadsheet(sheet_name):
+    # 重複していたら終了させる
+    sheets = get_all_spreadsheets()
+    for sheet in sheets:
+        if sheet.title == sheet_name:
+            print('すでに作成されています')
+            print('https://docs.google.com/spreadsheets/d/'+sheet.id+'/edit#gid=0')
+            return
 
-
-def create_spread_sheet(sheet_name):
     new_sp = client.create(sheet_name)
-    print(new_sp.id)
+    print('https://docs.google.com/spreadsheets/d/'+new_sp.id+'/edit#gid=0')
 
 
+def get_spreadsheet(sheet_name):
+    return client.open(sheet_name)
+
+
+def get_all_spreadsheets():
+    return client.openall()
+
+
+def _remove_spreadsheet(sheet_id):
+    client.del_spreadsheet(sheet_id)
+
+
+def remove_spreadsheet(sheet_name):
+    sheet = get_spreadsheet(sheet_name)
+    _remove_spreadsheet(sheet.id)
+
+
+def remove_all_spreadsheet():
+    sheets = get_all_spreadsheets()
+    for sheet in sheets:
+        _remove_spreadsheet(sheet.id)
+
+
+# 権限関係
 def permissions(sheet_name):
-    permission_list = client.list_permissions(data[sheet_name]['sheet_id'])
-    print(permission_list)
+    return client.list_permissions(get_spreadsheet(sheet_name).id)
 
 
-def add_permissions(sheet_name, user):
-    client.insert_permission(data[sheet_name]['sheet_id'],
+def add_permission(sheet_name, user):
+    client.insert_permission(get_spreadsheet(sheet_name).id,
                              data[user]['email'],
                              perm_type='user',
                              role='writer'
                              )
 
 
-def delete_permissions(sheet_id, user_id):
+def remove_permission(sheet_id, user_id):
     client.remove_permission(sheet_id, user_id)
 
 
-file.close()
+# work_sheet関係
+def add_worksheet(sheet_name, worksheet_name, rows=100, cols=100):
+    sheet = get_spreadsheet(sheet_name)
+    for worksheet in sheet.worksheets():
+        if worksheet.title == worksheet_name:
+            print('すでに作成されています')
+            return
 
+    sheet.add_worksheet(worksheet_name, rows, cols)
+
+
+def write_worksheet(sheet_name, worksheet_index=0, acell='A1', text='test'):
+    sheet = client.open(sheet_name)
+    worksheet = sheet.get_worksheet(worksheet_index)
+    worksheet.update_acell(acell, text)
+
+
+file.close()
