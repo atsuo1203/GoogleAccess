@@ -3,6 +3,8 @@ import yaml
 
 from gspread import Client, authorize
 from oauth2client.service_account import ServiceAccountCredentials
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 
 log = getLogger(__name__)
 
@@ -61,8 +63,15 @@ def delete_permissions(sheet_id, user_id):
     client.remove_permission(sheet_id, user_id)
 
 
-name = 'test2'
-permissions(name)
+# OAuth認証を行う
+gauth = GoogleAuth()
+gauth.CommandLineAuth()
+drive = GoogleDrive(gauth)
+
+# テキストをGoogleドライブに書き込む
+f = drive.CreateFile({'title': 'test/test.txt'})
+f.SetContentString('賢い人に与えよ。彼はさらに賢くなる。')
+f.Upload()
 
 file.close()
 

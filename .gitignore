@@ -2,3 +2,5 @@ client_id.json
 projectName.json
 venv
 config.yaml
+settings.yaml
+credentials.json
